@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Weather App - Roma</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+      transition: background 1s ease;
+      color: #333;
+    }
+    .card {
+      background: rgba(255, 255, 255, 0.95);
+      padding: 30px 25px;
+      border-radius: 20px;
+      box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+      width: 350px;
+      max-width: 90%;
+      text-align: center;
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 25px 35px rgba(0,0,0,0.3);
+    }
+    h2 {
+      margin-bottom: 20px;
+      font-size: 2rem;
+      background: linear-gradient(to right, #89c2f5, #a8d0f0);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-align: center;
+      transition: all 0.5s ease;
+    }
+    input {
+      padding: 12px;
+      margin: 8px 0;
+      width: calc(100% - 24px);
+      border-radius: 10px;
+      border: 2px solid #89c2f5; /* default border */
+      font-size: 1rem;
+      outline: none;
+      transition: all 0.5s ease;
+      color: #333;
+      background: #fff;
+    }
+    input:focus {
+      box-shadow: 0 0 5px rgba(0,0,0,0.2);
+    }
+    button {
+      padding: 12px;
+      margin: 8px 0;
+      width: calc(100% - 24px);
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: bold;
+      letter-spacing: 0.5px;
+      border: none;
+      cursor: pointer;
+      background: linear-gradient(to right, #89c2f5, #a8d0f0);
+      color: white;
+      transition: all 0.5s ease;
+    }
+    button:hover {
+      transform: scale(1.05);
+    }
+    .result {
+      margin-top: 20px;
+      padding: 15px;
+      border-radius: 10px;
+      background: rgba(0, 114, 255, 0.05);
+      box-shadow: inset 0 0 5px rgba(0,0,0,0.05);
+      transition: all 0.3s;
+    }
+    .result h3 {
+      margin: 10px 0;
+      color: #0072ff;
+      font-size: 1.5rem;
+    }
+    .small {
+      font-size: 0.9rem;
+      color: #555;
+    }
+    .loading::after {
+      content: '';
+      display: inline-block;
+      margin-left: 10px;
+      width: 12px;
+      height: 12px;
+      border: 2px solid #0072ff;
+      border-top: 2px solid transparent;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h2>🌤 Weather App</h2>
+    <input id="cityInput" placeholder="Enter city (e.g., London)" />
+    <button id="getBtn">Get Weather</button>
+    <div id="status" class="small">Powered by OpenWeatherMap</div>
+    <div id="result" class="result"></div>
+  </div>
+  <script>
+    const apiKey = "50e3d2c83620e767d3c098f3288a0600";
+    const getBtn = document.getElementById('getBtn');
+    const cityInput = document.getElementById('cityInput');
+    const result = document.getElementById('result');
+
+    function show(msg) { result.innerHTML = msg; }
+
+    function setBackground(weather) {
+      const body = document.body;
+      weather = weather.toLowerCase();
+      if(weather.includes("cloud")) body.style.background = "linear-gradient(to right, #d3d3d3, #7f8c8d)";
+      else if(weather.includes("rain") || weather.includes("drizzle") || weather.includes("thunderstorm")) body.style.background = "linear-gradient(to right, #6c757d, #2c3e50)";
+      else if(weather.includes("sun") || weather.includes("clear")) body.style.background = "linear-gradient(to right, #fceabb, #f8b500)";
+      else if(weather.includes("wind")) body.style.background = "linear-gradient(to right, #a1c4fd, #c2e9fb)";
+      else if(weather.includes("snow")) body.style.background = "linear-gradient(to right, #e6e9f0, #eef1f5)";
+      else body.style.background = "linear-gradient(to right, #89c2f5, #a8d0f0)";
+    }
+
+    function setThemeColors(weather) {
+      const header = document.querySelector('h2');
+      const button = document.querySelector('button');
+      weather = weather.toLowerCase();
+      let gradient = "linear-gradient(to right, #89c2f5, #a8d0f0)";
+      if(weather.includes("cloud")) gradient = "linear-gradient(to right, #d3d3d3, #7f8c8d)";
+      else if(weather.includes("rain") || weather.includes("drizzle") || weather.includes("thunderstorm")) gradient = "linear-gradient(to right, #6c757d, #2c3e50)";
+      else if(weather.includes("sun") || weather.includes("clear")) gradient = "linear-gradient(to right, #fceabb, #f8b500)";
+      else if(weather.includes("wind")) gradient = "linear-gradient(to right, #a1c4fd, #c2e9fb)";
+      else if(weather.includes("snow")) gradient = "linear-gradient(to right, #e6e9f0, #eef1f5)";
+
+      header.style.background = gradient;
+      header.style.webkitBackgroundClip = "text";
+      header.style.webkitTextFillColor = "transparent";
+      button.style.background = gradient;
+    }
+
+    function setInputBorder(weather) {
+      const input = document.querySelector('input');
+      weather = weather.toLowerCase();
+      let borderColor = "#89c2f5"; 
+      if(weather.includes("cloud")) borderColor = "#7f8c8d";
+      else if(weather.includes("rain") || weather.includes("drizzle") || weather.includes("thunderstorm")) borderColor = "#2c3e50";
+      else if(weather.includes("sun") || weather.includes("clear")) borderColor = "#f8b500";
+      else if(weather.includes("wind")) borderColor = "#a1c4fd";
+      else if(weather.includes("snow")) borderColor = "#eef1f5";
+
+      input.style.border = `2px solid ${borderColor}`;
+    }
+
+    async function fetchWeather(city) {
+      if(!city) { show('<div class="small">Please enter a city name.</div>'); return; }
+      show('<span class="loading">Loading</span>');
+      try {
+        const url = `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(city)}&appid=${apiKey}&units=metric`;
+        const resp = await fetch(url);
+        if(!resp.ok){
+          if(resp.status === 401) show('<div class="small">Invalid API key. Check it.</div>');
+          else if(resp.status === 404) show('<div class="small">City not found. Try another name.</div>');
+          else show('<div class="small">Error fetching weather: ' + resp.status + '</div>');
+          return;
+        }
+        const data = await resp.json();
+        setBackground(data.weather[0].main);
+        setThemeColors(data.weather[0].main);
+        setInputBorder(data.weather[0].main);
+
+        const weatherMain = data.weather[0].main.toLowerCase();
+        let weatherIcon = "🌤️";
+        if(weatherMain.includes("cloud")) weatherIcon = "☁️";
+        else if(weatherMain.includes("rain") || weatherMain.includes("drizzle") || weatherMain.includes("thunderstorm")) weatherIcon = "🌧️";
+        else if(weatherMain.includes("sun") || weatherMain.includes("clear")) weatherIcon = "☀️";
+        else if(weatherMain.includes("wind")) weatherIcon = "🌬️";
+        else if(weatherMain.includes("snow")) weatherIcon = "❄️";
+
+        const html = `
+          <h3>${weatherIcon} ${data.name}, ${data.sys.country}</h3>
+          <div><strong>${Math.round(data.main.temp)}°C</strong> — ${data.weather[0].description}</div>
+          <div class="small">Feels like ${Math.round(data.main.feels_like)}°C • Humidity ${data.main.humidity}%</div>
+          <div class="small">Wind ${data.wind.speed} m/s</div>
+        `;
+        show(html);
+      } catch (err) {
+        show('<div class="small">Network error. Check your internet.</div>');
+        console.error(err);
+      }
+    }
+
+    getBtn.addEventListener('click', () => fetchWeather(cityInput.value.trim()));
+    cityInput.addEventListener('keydown', (e) => { if(e.key === 'Enter') fetchWeather(cityInput.value.trim()); });
+  </script>
+</body>
+</html>
